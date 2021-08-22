@@ -4,9 +4,11 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 import { Exclude } from 'class-transformer';
+import { Article } from 'src/articles/entities/article.entity';
 
 @Entity()
 export class User {
@@ -38,6 +40,9 @@ export class User {
   @Column({ nullable: true })
   image: string;
 
+  @Column({ default: false })
+  following: boolean;
+
   @Exclude()
   @CreateDateColumn({
     type: 'timestamptz',
@@ -51,4 +56,7 @@ export class User {
     default: () => 'CURRENT_TIMESTAMP',
   })
   updateAt: Date;
+
+  @OneToMany(() => Article, (article) => article.slug)
+  articles: Article[];
 }

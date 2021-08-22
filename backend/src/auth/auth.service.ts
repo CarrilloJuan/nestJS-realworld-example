@@ -16,18 +16,21 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.userRepository.findOne({
-      where: { email: email },
-      select: ['id', 'password', 'email', 'username', 'bio', 'image'],
+      where: { email },
     });
-    const passMatch = await bcrypt.compare(password, user?.password);
-    if (passMatch) return user;
+    if (user) {
+      const passMatch = await bcrypt.compare(password, user?.password);
+      if (passMatch) return user;
+    }
     return null;
   }
 
   login(currentUser: User) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, createAt, updateAt, id, ...user } = currentUser;
     return {
       token: this.jwtService.sign({ sub: currentUser.id }),
-      ...currentUser,
+      ...user,
     };
   }
 }

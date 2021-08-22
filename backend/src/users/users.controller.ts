@@ -27,7 +27,9 @@ export class UsersController {
   @Post('users')
   async create(@Body('user') userData: CreateUserDto) {
     const user = await this.usersService.create(userData);
-    return await this.authService.login(user);
+    if (user) {
+      return this.authService.login(user);
+    }
   }
 
   @UseInterceptors(ClassSerializerInterceptor)

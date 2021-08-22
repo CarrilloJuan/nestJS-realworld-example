@@ -20,7 +20,11 @@ export class UsersService {
     const newUser = this.usersRepository.create(user);
     const hashPassword = await bcrypt.hash(newUser.password, 10);
     newUser.password = hashPassword;
-    return this.usersRepository.save(newUser);
+    try {
+      return this.usersRepository.save(newUser);
+    } catch (error) {
+      console.log({ error });
+    }
   }
 
   findOne(query: userQuery) {
