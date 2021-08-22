@@ -1,33 +1,37 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRepository } from './entities/user-repository';
+
+import { User } from './entities/user.entity';
 import { userQuery } from './models/user-query';
 
 @Injectable()
 export class UsersService {
-  constructor(private usersRepository: UserRepository) {}
+  constructor(
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {}
 
   async create(user: CreateUserDto) {
-    const newUserModel = this.usersRepository.create(user);
-    const hashPassword = await bcrypt.hash(newUserModel.password, 10);
-    newUserModel.password = hashPassword;
-    return this.usersRepository.saveUser(newUserModel);
-  }
-
-  findAll() {
-    return this.usersRepository.findOne();
+    const newUser = this.usersRepository.create(user);
+    const hashPassword = await bcrypt.hash(newUser.password, 10);
+    newUser.password = hashPassword;
+    return this.usersRepository.save(newUser);
   }
 
   findOne(query: userQuery) {
     return this.usersRepository.findOne({ where: { ...query } });
   }
 
-  async update(changes: UpdateUserDto) {
-    const user = await this.usersRepository.findOne({ username: 'email2' });
-    this.usersRepository.merge(user, changes);
-    return this.usersRepository.save(user);
+  async update(userId: number, changes: UpdateUserDto) {
+    const user = await this.usersRepository.findOne(userId);
+    if (user) {
+      this.usersRepository.merge(user, changes);
+      return this.usersRepository.save(user);
+    }
   }
 }

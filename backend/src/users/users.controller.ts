@@ -5,14 +5,17 @@ import {
   Body,
   Put,
   UseGuards,
-  Request,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { AuthService } from 'src/auth/auth.service';
-import { jwtConstants } from 'src/auth/constants';
+import { TransformerUserResponse } from './transformer-user-response.interceptor';
+import { CurrentUser } from './current-user.decorator';
+import { CurrentUser as CurrentUserEntity } from './entities/current-user.entity';
 
 @Controller()
 export class UsersController {
@@ -22,41 +25,27 @@ export class UsersController {
   ) {}
 
   @Post('users')
-  async create(@Body('user') uderData: CreateUserDto) {
-    const newUser = await this.usersService.create(uderData);
-    return {
-      user: await this.authService.login(newUser),
-    };
+  async create(@Body('user') userData: CreateUserDto) {
+    const user = await this.usersService.create(userData);
+    return await this.authService.login(user);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('users')
-  findAll() {
-    return this.usersService.findAll();
-  }
-
+  @UseInterceptors(ClassSerializerInterceptor)
+  @UseInterceptors(TransformerUserResponse)
   @UseGuards(JwtAuthGuard)
   @Get('user')
-  async findOne(@Request() req) {
-    const userId = req.user?.userId;
-    const token = req.headers?.authorization.replace(jwtConstants.scheme, '');
-    const { id, password, ...user } = await this.usersService.findOne({
-      id: userId,
+  async findOne(@CurrentUser() currentUser: CurrentUserEntity) {
+    return this.usersService.findOne({
+      id: currentUser.userId,
     });
-    return {
-      user: {
-        token,
-        ...user,
-      },
-    };
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('user')
-  async update(@Body('user') updateUserDto: UpdateUserDto) {
-    const { id, updateAt, ...user } = await this.usersService.update(
-      updateUserDto,
-    );
-    return { user };
+  async update(
+    @CurrentUser() currentUser: CurrentUserEntity,
+    @Body('user') updateUserDto: UpdateUserDto,
+  ) {
+    return await this.usersService.update(currentUser.userId, updateUserDto);
   }
 }

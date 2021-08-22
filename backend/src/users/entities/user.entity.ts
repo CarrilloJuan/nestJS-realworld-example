@@ -6,8 +6,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Exclude } from 'class-transformer';
+
 @Entity()
 export class User {
+  @Exclude()
   @PrimaryGeneratedColumn('uuid')
   id: number;
 
@@ -23,6 +26,7 @@ export class User {
   })
   email: string;
 
+  @Exclude()
   @Column({
     length: 100,
   })
@@ -34,15 +38,15 @@ export class User {
   @Column({ nullable: true })
   image: string;
 
+  @Exclude()
   @CreateDateColumn({
-    select: false,
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
   createAt: Date;
 
+  @Exclude()
   @UpdateDateColumn({
-    select: false,
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
