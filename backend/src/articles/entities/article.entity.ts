@@ -1,10 +1,12 @@
 import { Exclude } from 'class-transformer';
+import { Comment } from 'src/comments/entities/comment.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -46,4 +48,7 @@ export class Article {
 
   @ManyToOne(() => User, (user) => user.id)
   author: User;
+
+  @OneToMany(() => Comment, (comments) => comments.id)
+  comments: Comment[];
 }

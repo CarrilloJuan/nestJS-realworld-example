@@ -20,15 +20,15 @@ export class UsersService {
     const newUser = this.usersRepository.create(user);
     const hashPassword = await bcrypt.hash(newUser.password, 10);
     newUser.password = hashPassword;
-    try {
-      return this.usersRepository.save(newUser);
-    } catch (error) {
-      console.log({ error });
-    }
+    return this.usersRepository.save(newUser);
   }
 
   findOne(query: userQuery) {
     return this.usersRepository.findOne({ where: { ...query } });
+  }
+
+  findOneOrFail(id: number) {
+    return this.usersRepository.findOneOrFail(id);
   }
 
   async update(userId: number, changes: UpdateUserDto) {

@@ -40,6 +40,10 @@ export class ArticlesService {
     });
   }
 
+  findOneOrFail(id: string) {
+    return this.articlesRepository.findOneOrFail(id);
+  }
+
   update(id: string, updateArticleDto: UpdateArticleDto) {
     return this.articlesRepository.update(id, updateArticleDto);
   }
