@@ -3,7 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   Delete,
   UseGuards,
@@ -41,13 +41,36 @@ export class ArticlesController {
     return this.articlesService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateArticleDto: UpdateArticleDto) {
+  @UseGuards(JwtAuthGuard)
+  @Put(':id')
+  update(
+    @Param('id') id: string,
+    @Body('article') updateArticleDto: UpdateArticleDto,
+  ) {
     return this.articlesService.update(id, updateArticleDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.articlesService.remove(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':slug/favorite')
+  favoriteArticle(
+    @Param('slug') slug: string,
+    @CurrentUser() currentUser: CurrentUserEntity,
+  ) {
+    return this.articlesService.favoriteArticle(slug, currentUser.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':slug/favorite')
+  unfavoriteArticle(
+    @Param('slug') slug: string,
+    @CurrentUser() currentUser: CurrentUserEntity,
+  ) {
+    return this.articlesService.unFavoriteArticle(slug, currentUser.userId);
   }
 }

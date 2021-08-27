@@ -1,28 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
+import { UsersService } from 'src/users/users.service';
+import { Connection, Repository, In } from 'typeorm';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
-import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class ArticlesService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private usersService: UsersService,
     @InjectRepository(Article)
     private articlesRepository: Repository<Article>,
+    private connection: Connection,
   ) {}
 
-  async create(userId: number, createArticleDto: CreateArticleDto) {
-    // TODO: Check if exits
+  async create(userId: string, createArticleDto: CreateArticleDto) {
     const newArticle = this.articlesRepository.create(createArticleDto);
-    // TODO: call to userServices instead of repository
-    const author = await this.userRepository.findOne({
-      where: { id: userId },
-      select: ['id'],
-    });
+    const author = await this.usersService.findOneOrFail(userId);
     if (author) {
       newArticle.author = author;
     }
@@ -36,7 +32,7 @@ export class ArticlesService {
   findOne(id: string) {
     return this.articlesRepository.findOne({
       where: { slug: id },
-      relations: ['author'],
+      relations: ['author', 'favoritedUsers'],
     });
   }
 
@@ -48,7 +44,79 @@ export class ArticlesService {
     return this.articlesRepository.update(id, updateArticleDto);
   }
 
-  remove(id: string) {
+  async remove(id: string) {
     return this.articlesRepository.delete(id);
+  }
+
+  async favoriteArticle(slug: string, userId: string) {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const user = await queryRunner.manager.findOneOrFail(User, {
+        relations: ['favoriteArticles'],
+        where: [{ id: userId }],
+      });
+
+      const isFavoriteArticle = user.favoriteArticles.find(
+        (article) => article.slug === slug,
+      );
+      //TODO: Looking for optimization
+      if (!isFavoriteArticle) {
+        const article = await queryRunner.manager.findOneOrFail(Article, {
+          relations: ['favoritedUsers'],
+          where: { slug },
+        });
+        article.favoritedUsers.push(user);
+        user.favoriteArticles.push(article);
+        await queryRunner.manager.save(article);
+        await queryRunner.manager.save(user);
+      }
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      console.log(err);
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async unFavoriteArticle(slug: string, userId: string) {
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const user = await queryRunner.manager.findOneOrFail(User, {
+        relations: ['favoriteArticles'],
+        where: [{ id: userId }],
+      });
+
+      const isFavoriteArticle = user.favoriteArticles.find(
+        (article) => article.slug === slug,
+      );
+      //TODO: With cascades enabled, you can delete this relation with only one save call.
+      if (isFavoriteArticle) {
+        const article = await queryRunner.manager.findOneOrFail(Article, {
+          relations: ['favoritedUsers'],
+          where: { slug },
+        });
+        article.favoritedUsers = article.favoritedUsers.filter(
+          (user) => user.id !== userId,
+        );
+
+        user.favoriteArticles = user.favoriteArticles.filter(
+          (article) => article.slug !== slug,
+        );
+
+        await queryRunner.manager.save(article);
+        await queryRunner.manager.save(user);
+      }
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      console.log(err);
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

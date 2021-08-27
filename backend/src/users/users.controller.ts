@@ -13,7 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { AuthService } from 'src/auth/auth.service';
-import { TransformerUserResponse } from './transformer-user-response.interceptor';
+import { TransformerUserResponse } from './transform-user-response.interceptor';
 import { CurrentUser } from './current-user.decorator';
 import { CurrentUser as CurrentUserEntity } from './entities/current-user.entity';
 

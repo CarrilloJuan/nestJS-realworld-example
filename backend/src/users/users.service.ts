@@ -24,14 +24,17 @@ export class UsersService {
   }
 
   findOne(query: userQuery) {
-    return this.usersRepository.findOne({ where: { ...query } });
+    return this.usersRepository.findOne({
+      where: { ...query },
+      relations: ['favoriteArticles'],
+    });
   }
 
-  findOneOrFail(id: number) {
+  findOneOrFail(id: string) {
     return this.usersRepository.findOneOrFail(id);
   }
 
-  async update(userId: number, changes: UpdateUserDto) {
+  async update(userId: string, changes: UpdateUserDto) {
     const user = await this.usersRepository.findOne(userId);
     if (user) {
       this.usersRepository.merge(user, changes);

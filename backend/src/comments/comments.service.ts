@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ArticlesService } from 'src/articles/articles.service';
 import { UsersService } from 'src/users/users.service';
@@ -11,14 +11,12 @@ export class CommentsService {
   constructor(
     @InjectRepository(Comment)
     private commentsRepository: Repository<Comment>,
-    @Inject()
     private usersService: UsersService,
-    @Inject()
     private articlesService: ArticlesService,
   ) {}
 
   async create(
-    userId: number,
+    userId: string,
     articleId: string,
     commentData: CreateCommentDto,
   ) {
@@ -31,14 +29,16 @@ export class CommentsService {
   }
 
   findAll() {
-    return `This action returns all comments`;
+    return this.commentsRepository.find({
+      relations: ['article', 'autor'],
+    });
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} comment`;
+    return this.commentsRepository.findOne(id);
   }
 
   remove(id: number) {
-    return `This action removes a #${id} comment`;
+    return this.commentsRepository.delete(id);
   }
 }

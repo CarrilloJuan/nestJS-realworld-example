@@ -37,6 +37,6 @@ export class Comment {
   autor: User;
 
   @Exclude()
-  @ManyToOne(() => Article, (user) => user.slug)
+  @ManyToOne(() => Article, (article) => article.slug)
   article: Article;
 }

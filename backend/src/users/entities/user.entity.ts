@@ -5,6 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  JoinColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 
 import { Exclude } from 'class-transformer';
@@ -15,7 +18,7 @@ import { Comment } from 'src/comments/entities/comment.entity';
 export class User {
   @Exclude()
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Column({
     length: 100,
@@ -58,10 +61,15 @@ export class User {
   })
   updateAt: Date;
 
+  @ManyToMany(() => Article, (article) => article.favoritedUsers)
+  @JoinTable()
+  favoriteArticles: Article[];
+
   @OneToMany(() => Article, (article) => article.slug)
+  @JoinColumn()
   articles: Article[];
 
-  @Exclude()
   @OneToMany(() => Comment, (comment) => comment.id)
+  @JoinColumn()
   comments: Comment[];
 }

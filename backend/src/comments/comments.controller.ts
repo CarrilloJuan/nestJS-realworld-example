@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CurrentUser } from 'src/users/current-user.decorator';
@@ -13,17 +14,19 @@ import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 import { CurrentUser as CurrentUserEntity } from '../users/entities/current-user.entity';
+import { TransformCommentResponse } from './transform-comment-response.interceptor';
 
 @Controller('articles')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
+  @UseInterceptors(TransformCommentResponse)
   @UseGuards(JwtAuthGuard)
   @Post(':slug/comments')
   create(
     @Param('slug') articleId: string,
     @CurrentUser() currentUser: CurrentUserEntity,
-    @Body() createCommentDto: CreateCommentDto,
+    @Body('comment') createCommentDto: CreateCommentDto,
   ) {
     return this.commentsService.create(
       currentUser.userId,
@@ -32,18 +35,24 @@ export class CommentsController {
     );
   }
 
-  @Get()
+  @UseInterceptors(TransformCommentResponse)
+  @UseGuards(JwtAuthGuard)
+  @Get(':slug/comments')
   findAll() {
     return this.commentsService.findAll();
   }
 
+  @UseInterceptors(TransformCommentResponse)
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentsService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.commentsService.findOne(id);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.commentsService.remove(+id);
+  @UseInterceptors(TransformCommentResponse)
+  @UseGuards(JwtAuthGuard)
+  @Delete(':slug/comments/:id')
+  remove(@Param('id') id: number) {
+    return this.commentsService.remove(id);
   }
 }

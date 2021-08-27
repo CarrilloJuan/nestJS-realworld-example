@@ -1,4 +1,3 @@
-import { Exclude } from 'class-transformer';
 import { Comment } from 'src/comments/entities/comment.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
@@ -9,6 +8,8 @@ import {
   OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
+  JoinColumn,
+  ManyToMany,
 } from 'typeorm';
 
 @Entity()
@@ -50,5 +51,9 @@ export class Article {
   author: User;
 
   @OneToMany(() => Comment, (comments) => comments.id)
+  @JoinColumn()
   comments: Comment[];
+
+  @ManyToMany(() => User, (user) => user.favoriteArticles)
+  favoritedUsers: User[];
 }
