@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/users/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { classToPlain } from 'class-transformer';
 
 @Injectable()
 export class AuthService {
@@ -19,18 +20,19 @@ export class AuthService {
       where: { email },
     });
     if (user) {
-      const passMatch = await bcrypt.compare(password, user?.password);
+      const passMatch = await bcrypt.compare(password, user.password);
       if (passMatch) return user;
     }
     return null;
   }
 
-  login(currentUser: User) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, createAt, updateAt, id, ...user } = currentUser;
-    return {
-      token: this.jwtService.sign({ sub: currentUser.id }),
-      ...user,
-    };
+  login(user: User) {
+    const token = this.jwtService.sign({ sub: user.id });
+    const parsedUser = classToPlain(user);
+    return { token, ...parsedUser };
+  }
+
+  currentUser(userId: string) {
+    return this.userRepository.findOneOrFail(userId);
   }
 }

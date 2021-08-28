@@ -8,11 +8,13 @@ import {
   JoinColumn,
   ManyToMany,
   JoinTable,
+  OneToOne,
 } from 'typeorm';
 
 import { Exclude } from 'class-transformer';
 import { Article } from 'src/articles/entities/article.entity';
 import { Comment } from 'src/comments/entities/comment.entity';
+import { Profile } from './profile.entity';
 
 @Entity()
 export class User {
@@ -24,28 +26,13 @@ export class User {
     length: 100,
     unique: true,
   })
-  username: string;
-
-  @Column({
-    length: 100,
-    unique: true,
-  })
   email: string;
 
-  @Exclude()
+  @Exclude({ toPlainOnly: true })
   @Column({
     length: 100,
   })
   password: string;
-
-  @Column({ type: 'text', nullable: true })
-  bio: string;
-
-  @Column({ nullable: true })
-  image: string;
-
-  @Column({ default: false })
-  following: boolean;
 
   @Exclude()
   @CreateDateColumn({
@@ -60,6 +47,17 @@ export class User {
     default: () => 'CURRENT_TIMESTAMP',
   })
   updateAt: Date;
+
+  @Exclude({ toPlainOnly: true })
+  @Column({ nullable: true })
+  profileId: number;
+
+  @OneToOne(() => Profile, (profile) => profile.username, {
+    eager: true,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  profile: Profile;
 
   @ManyToMany(() => Article, (article) => article.favoritedUsers)
   @JoinTable()

@@ -9,11 +9,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { CurrentUser } from 'src/users/current-user.decorator';
+import { CurrentUserDecorator } from 'src/users/current-user.decorator';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
-import { CurrentUser as CurrentUserEntity } from '../users/entities/current-user.entity';
+import { CurrentUser } from '../auth/models/current-user';
 import { TransformCommentResponse } from './transform-comment-response.interceptor';
 
 @Controller('articles')
@@ -25,7 +25,7 @@ export class CommentsController {
   @Post(':slug/comments')
   create(
     @Param('slug') articleId: string,
-    @CurrentUser() currentUser: CurrentUserEntity,
+    @CurrentUserDecorator() currentUser: CurrentUser,
     @Body('comment') createCommentDto: CreateCommentDto,
   ) {
     return this.commentsService.create(

@@ -9,12 +9,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { CurrentUser } from 'src/users/current-user.decorator';
+import { CurrentUserDecorator } from 'src/users/current-user.decorator';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
-import { CurrentUser as CurrentUserEntity } from '../users/entities/current-user.entity';
+import { CurrentUser } from '../auth/models/current-user';
 
 @Controller('articles')
 export class ArticlesController {
@@ -23,7 +23,7 @@ export class ArticlesController {
   @UseGuards(JwtAuthGuard)
   @Post()
   create(
-    @CurrentUser() currentUser: CurrentUserEntity,
+    @CurrentUserDecorator() currentUser: CurrentUser,
     @Body('article') createArticleDto: CreateArticleDto,
   ) {
     return this.articlesService.create(currentUser.userId, createArticleDto);
@@ -60,7 +60,7 @@ export class ArticlesController {
   @Post(':slug/favorite')
   favoriteArticle(
     @Param('slug') slug: string,
-    @CurrentUser() currentUser: CurrentUserEntity,
+    @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
     return this.articlesService.favoriteArticle(slug, currentUser.userId);
   }
@@ -69,7 +69,7 @@ export class ArticlesController {
   @Delete(':slug/favorite')
   unfavoriteArticle(
     @Param('slug') slug: string,
-    @CurrentUser() currentUser: CurrentUserEntity,
+    @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
     return this.articlesService.unFavoriteArticle(slug, currentUser.userId);
   }
