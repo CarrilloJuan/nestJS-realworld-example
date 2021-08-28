@@ -26,16 +26,18 @@ export class Article {
   @Column({ type: 'text' })
   body: string;
 
-  @Column('simple-array')
+  @Column('simple-array', { name: 'tag_list' })
   tagList: string[];
 
   @CreateDateColumn({
+    name: 'create_at',
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
   createAt: Date;
 
   @UpdateDateColumn({
+    name: 'update_at',
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
@@ -44,7 +46,7 @@ export class Article {
   @Column({ default: false })
   favorited: boolean;
 
-  @Column({ default: 0 })
+  @Column({ default: 0, name: 'favorites_count' })
   favoritesCount: number;
 
   @ManyToOne(() => User, (user) => user.id)

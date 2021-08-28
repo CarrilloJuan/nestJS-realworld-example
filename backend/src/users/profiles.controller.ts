@@ -15,14 +15,15 @@ import { CurrentUserDecorator } from './current-user.decorator';
 import { ProfilesService } from './profiles.service';
 import { TransformerProfileResponse } from './transform-profile-response.interceptor';
 
+@UseInterceptors(ClassSerializerInterceptor)
+@UseInterceptors(TransformerProfileResponse)
 @Controller('profiles')
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
+
   @SerializeOptions({
     groups: ['profile'],
   })
-  @UseInterceptors(ClassSerializerInterceptor)
-  @UseInterceptors(TransformerProfileResponse)
   @UseGuards(JwtAuthGuard)
   @Get(':username')
   async findProfile(@Param('username') username: string) {

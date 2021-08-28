@@ -5,9 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  ManyToMany,
 } from 'typeorm';
 
-import { Exclude, Expose } from 'class-transformer';
+import { Exclude } from 'class-transformer';
 import { User } from './user.entity';
 
 @Entity()
@@ -28,12 +29,10 @@ export class Profile {
   @Column({ nullable: true, default: null })
   image: string;
 
-  @Expose({ groups: ['profile'] })
-  @Column({ default: false })
-  following: boolean;
-
   @Exclude()
   @CreateDateColumn({
+    select: false,
+    name: 'create_at',
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
@@ -41,6 +40,8 @@ export class Profile {
 
   @Exclude()
   @UpdateDateColumn({
+    select: false,
+    name: 'update_at',
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
@@ -50,4 +51,10 @@ export class Profile {
     cascade: ['insert'],
   })
   user: User;
+
+  @Exclude()
+  @ManyToMany(() => User, (user) => user.followedProfiles, {
+    cascade: ['insert', 'update'],
+  })
+  followedUsers: User[];
 }

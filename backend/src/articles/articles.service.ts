@@ -61,7 +61,7 @@ export class ArticlesService {
       const isFavoriteArticle = user.favoriteArticles.find(
         (article) => article.slug === slug,
       );
-      //TODO: Looking for optimization
+
       if (!isFavoriteArticle) {
         const article = await queryRunner.manager.findOneOrFail(Article, {
           relations: ['favoritedUsers'],
@@ -94,7 +94,7 @@ export class ArticlesService {
       const isFavoriteArticle = user.favoriteArticles.find(
         (article) => article.slug === slug,
       );
-      //TODO: With cascades enabled, you can delete this relation with only one save call.
+
       if (isFavoriteArticle) {
         const article = await queryRunner.manager.findOneOrFail(Article, {
           relations: ['favoritedUsers'],
