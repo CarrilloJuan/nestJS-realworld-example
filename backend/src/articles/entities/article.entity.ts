@@ -1,5 +1,3 @@
-import { Comment } from 'src/comments/entities/comment.entity';
-import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -11,6 +9,10 @@ import {
   JoinColumn,
   ManyToMany,
 } from 'typeorm';
+import { Exclude, Transform } from 'class-transformer';
+
+import { Comment } from 'src/comments/entities/comment.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Entity()
 export class Article {
@@ -43,19 +45,31 @@ export class Article {
   })
   updateAt: Date;
 
-  @Column({ default: false })
-  favorited: boolean;
-
   @Column({ default: 0, name: 'favorites_count' })
   favoritesCount: number;
 
+  // TODO: Extract to helper, go out of the entity, try leftJoinAndMap
+  @Transform(({ value: author, obj: article }) => {
+    const { profile: { id = '', ...authorProps } = {} } = author;
+    return {
+      username: author.username,
+      ...authorProps,
+    };
+  })
   @ManyToOne(() => User, (user) => user.id)
-  author: User;
+  author: string;
 
   @OneToMany(() => Comment, (comments) => comments.id)
   @JoinColumn()
   comments: Comment[];
 
+  @Exclude({ toPlainOnly: true })
   @ManyToMany(() => User, (user) => user.favoriteArticles)
   favoritedUsers: User[];
+
+  @Exclude({ toPlainOnly: true })
+  favoritedUserIds: string[];
+
+  @Transform(({ value }) => !!value)
+  favorited: boolean;
 }

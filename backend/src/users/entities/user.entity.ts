@@ -35,6 +35,12 @@ export class User {
   })
   password: string;
 
+  @Column({
+    length: 100,
+    unique: true,
+  })
+  username: string;
+
   @Exclude()
   @CreateDateColumn({
     select: false,
@@ -57,16 +63,16 @@ export class User {
   @Column({ nullable: true, name: 'profile_id' })
   profileId: number;
 
-  @OneToOne(() => Profile, (profile) => profile.username, {
+  @OneToOne(() => Profile, (profile) => profile.id, {
     eager: true,
+    cascade: true,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
 
   @OneToMany(() => Article, (article) => article.slug)
-  @JoinColumn({ name: 'articles_id' })
-  articles: Article[];
+  articles: string[];
 
   @OneToMany(() => Comment, (comment) => comment.id)
   @JoinColumn({ name: 'comments_id' })

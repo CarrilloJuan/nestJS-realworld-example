@@ -30,7 +30,6 @@ export class UsersService {
       newUser.password = hashPassword;
 
       const profile = queryRunner.manager.create(Profile);
-      profile.username = userData.username;
       await queryRunner.manager.save(profile);
 
       newUser.profile = profile;

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CurrentUserDecorator } from 'src/users/current-user.decorator';
@@ -31,14 +32,28 @@ export class ArticlesController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.articlesService.findAll();
+  findArticles(
+    @Query('author') author: string,
+    @Query('favorited') favoritedByUser: string,
+    @CurrentUserDecorator() currentUser: CurrentUser,
+  ) {
+    const { userId } = currentUser;
+    if (author) {
+      return this.articlesService.findByAuthor(author, userId);
+    }
+    if (favoritedByUser) {
+      return this.articlesService.favoritedByUser(favoritedByUser, userId);
+    }
+    return this.articlesService.findAll(userId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.articlesService.findOne(id);
+  @Get(':slug')
+  findOne(
+    @Param('slug') slug: string,
+    @CurrentUserDecorator() currentUser: CurrentUser,
+  ) {
+    return this.articlesService.findOne(currentUser.userId, slug);
   }
 
   @UseGuards(JwtAuthGuard)

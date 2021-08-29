@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { classToPlain } from 'class-transformer';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { Connection, Repository } from 'typeorm';
@@ -20,20 +21,74 @@ export class ArticlesService {
     const newArticle = this.articlesRepository.create(createArticleDto);
     const author = await this.usersService.findOneOrFail(userId);
     if (author) {
-      newArticle.author = author;
+      newArticle.author = author.id;
     }
     return this.articlesRepository.save(newArticle);
   }
 
-  findAll() {
-    return this.articlesRepository.find({ relations: ['author'] });
+  commomArticlesQueryBuilder = (userId: string) =>
+    this.connection
+      .getRepository(Article)
+      .createQueryBuilder('article')
+      .leftJoinAndSelect('article.author', 'author')
+      .leftJoinAndSelect('author.profile', 'profile')
+      .leftJoinAndSelect('author.favoriteArticles', 'favoriteArticles')
+      .leftJoinAndMapOne(
+        'article.favorited',
+        'article.favoritedUsers',
+        'favoritedUsers',
+        'favoritedUsers.id IN (:...usersId)',
+        {
+          usersId: [userId],
+        },
+      );
+
+  async findAll(userId: string) {
+    const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
+      userId,
+    ).getManyAndCount();
+
+    return {
+      articles: classToPlain(articles),
+      articlesCount,
+    };
   }
 
-  findOne(id: string) {
-    return this.articlesRepository.findOne({
-      where: { slug: id },
-      relations: ['author', 'favoritedUsers'],
-    });
+  async findByAuthor(author: string, userId: string) {
+    const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
+      userId,
+    )
+      .where('author.username = :author', {
+        author,
+      })
+      .getManyAndCount();
+
+    return {
+      articles: classToPlain(articles),
+      articlesCount,
+    };
+  }
+
+  async favoritedByUser(user: string, userId: string) {
+    const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
+      userId,
+    )
+      .where('favoritedUsers.username IN (:...users)', {
+        users: [user],
+      })
+      .getManyAndCount();
+
+    return {
+      articles: classToPlain(articles),
+      articlesCount,
+    };
+  }
+
+  async findOne(userId: string, slug: string) {
+    const article = await this.commomArticlesQueryBuilder(userId)
+      .where({ slug })
+      .getOne();
+    return { article: classToPlain(article) };
   }
 
   findOneOrFail(id: string) {
@@ -68,6 +123,7 @@ export class ArticlesService {
           where: { slug },
         });
         article.favoritedUsers.push(user);
+        article.favoritesCount += 1;
         user.favoriteArticles.push(article);
         await queryRunner.manager.save(article);
         await queryRunner.manager.save(user);
@@ -103,6 +159,8 @@ export class ArticlesService {
         article.favoritedUsers = article.favoritedUsers.filter(
           (user) => user.id !== userId,
         );
+
+        article.favoritesCount -= 1;
 
         user.favoriteArticles = user.favoriteArticles.filter(
           (article) => article.slug !== slug,

@@ -13,15 +13,8 @@ import { User } from './user.entity';
 
 @Entity()
 export class Profile {
-  @Exclude()
   @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column({
-    length: 100,
-    unique: true,
-  })
-  username: string;
 
   @Column({ type: 'text', nullable: true, default: null })
   bio: string;
@@ -47,14 +40,12 @@ export class Profile {
   })
   updateAt: Date;
 
-  @OneToOne(() => User, (user) => user.id, {
-    cascade: ['insert'],
-  })
+  @OneToOne(() => User, (user) => user.id)
   user: User;
 
   @Exclude()
-  @ManyToMany(() => User, (user) => user.followedProfiles, {
-    cascade: ['insert', 'update'],
-  })
+  @ManyToMany(() => User, (user) => user.followedProfiles)
   followedUsers: User[];
+
+  following: boolean;
 }
