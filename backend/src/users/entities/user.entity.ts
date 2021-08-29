@@ -63,7 +63,7 @@ export class User {
   @Column({ nullable: true, name: 'profile_id' })
   profileId: number;
 
-  @OneToOne(() => Profile, (profile) => profile.id, {
+  @OneToOne(() => Profile, (profile) => profile.user, {
     eager: true,
     cascade: true,
     onDelete: 'CASCADE',
@@ -78,7 +78,9 @@ export class User {
   @JoinColumn({ name: 'comments_id' })
   comments: Comment[];
 
-  @ManyToMany(() => Profile, (profile) => profile.followedUsers)
+  @ManyToMany(() => Profile, (profile) => profile.followedUsers, {
+    cascade: true,
+  })
   @JoinTable({ name: 'users_followed_profiles' })
   followedProfiles: Profile[];
 

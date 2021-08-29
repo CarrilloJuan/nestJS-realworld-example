@@ -15,48 +15,71 @@ export class ProfilesService {
     private connection: Connection,
   ) {}
 
-  findOne(username: string) {
-    return this.profileRepository.findOneOrFail({
-      where: { username },
-    });
+  async findOne(username: string, currentUserId) {
+    return this.connection
+      .getRepository(Profile)
+      .createQueryBuilder('profile')
+      .leftJoinAndMapOne(
+        'profile.following',
+        'profile.followedUsers',
+        'followedUsers',
+        'followedUsers.id IN (:...usersId)',
+        {
+          usersId: [currentUserId],
+        },
+      )
+      .leftJoinAndSelect('profile.user', 'user')
+      .where('user.username= :username', { username })
+      .getOneOrFail();
   }
 
   async followUser(username: string, currentUserId: string) {
-    const profile = await this.profileRepository.findOneOrFail({
+    const userToFollow = await this.userRepository.findOneOrFail({
       where: { username },
-      relations: ['followedUsers'],
     });
-    const user = await this.userRepository.findOneOrFail(currentUserId, {
+    const profileToFollow = await this.profileRepository.findOneOrFail({
+      relations: ['followedUsers'],
+      where: { id: userToFollow.profileId },
+    });
+
+    const currentUser = await this.userRepository.findOneOrFail(currentUserId, {
       relations: ['followedProfiles'],
     });
 
-    const isFollowed = user.followedProfiles.find(
-      (followedProfile) => followedProfile.id === profile.id,
+    const isFollowed = currentUser.followedProfiles.find(
+      (followedProfile) => followedProfile.id === profileToFollow.id,
     );
-    await this.connection.transaction(async (manager) => {
-      if (!isFollowed) {
-        user.followedProfiles.push(profile);
-        profile.followedUsers.push(user);
-        await manager.save(user);
-        await manager.save(profile);
-      }
-    });
-    const parsedProfile = classToPlain(profile);
+
+    if (!isFollowed) {
+      await this.connection
+        .getRepository(User)
+        .createQueryBuilder()
+        .relation(User, 'followedProfiles')
+        .of(currentUser)
+        .add(profileToFollow);
+    }
+
+    const parsedProfile = classToPlain(profileToFollow);
     return { ...parsedProfile, following: true };
   }
 
   async unFollowUser(username: string, currentUserId: string) {
-    const profile = await this.profileRepository.findOneOrFail({
-      relations: ['followedUsers'],
+    const userToUnFollow = await this.userRepository.findOneOrFail({
       where: { username },
+    });
+    const profileToUnfollow = await this.profileRepository.findOneOrFail({
+      relations: ['followedUsers'],
+      where: { id: userToUnFollow.profileId },
     });
 
     const userFollowingProfile = await this.connection
       .getRepository(User)
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.followedProfiles', 'followedProfiles')
       .where('user.id = :userId', { userId: currentUserId })
-      .andWhere('followedProfiles.username = :username', { username })
+      .leftJoinAndSelect('user.followedProfiles', 'followedProfiles')
+      .andWhere('followedProfiles.id = :profileToUnfollowId', {
+        profileToUnfollowId: profileToUnfollow.id,
+      })
       .getOne();
 
     if (userFollowingProfile) {
@@ -65,10 +88,10 @@ export class ProfilesService {
         .createQueryBuilder()
         .relation(User, 'followedProfiles')
         .of(userFollowingProfile)
-        .remove(profile);
+        .remove(profileToUnfollow);
     }
 
-    const parsedProfile = classToPlain(profile);
+    const parsedProfile = classToPlain(profileToUnfollow);
     return { ...parsedProfile, following: false };
   }
 }

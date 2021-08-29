@@ -8,7 +8,7 @@ import {
   ManyToMany,
 } from 'typeorm';
 
-import { Exclude } from 'class-transformer';
+import { Exclude, Transform } from 'class-transformer';
 import { User } from './user.entity';
 
 @Entity()
@@ -40,12 +40,14 @@ export class Profile {
   })
   updateAt: Date;
 
-  @OneToOne(() => User, (user) => user.id)
+  @Exclude({ toPlainOnly: true })
+  @OneToOne(() => User, (user) => user.profile)
   user: User;
 
   @Exclude()
   @ManyToMany(() => User, (user) => user.followedProfiles)
   followedUsers: User[];
 
+  @Transform(({ value }) => !!value)
   following: boolean;
 }

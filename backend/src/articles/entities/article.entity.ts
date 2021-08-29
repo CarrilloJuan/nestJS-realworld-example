@@ -49,11 +49,13 @@ export class Article {
   favoritesCount: number;
 
   // TODO: Extract to helper, go out of the entity, try leftJoinAndMap
-  @Transform(({ value: author, obj: article }) => {
-    const { profile: { id = '', ...authorProps } = {} } = author;
+  @Transform(({ value: author }) => {
+    const { profile: { id = '', following = '', ...profileProps } = {} } =
+      author;
     return {
       username: author.username,
-      ...authorProps,
+      ...profileProps,
+      following: !!following,
     };
   })
   @ManyToOne(() => User, (user) => user.id)

@@ -48,21 +48,26 @@ export class ArticlesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get(':slug')
+  @Get(':id')
   findOne(
-    @Param('slug') slug: string,
+    @Param('id') articleId: string,
     @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
-    return this.articlesService.findOne(currentUser.userId, slug);
+    return this.articlesService.findOne(currentUser.userId, articleId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   update(
-    @Param('id') id: string,
+    @Param('id') articleId: string,
     @Body('article') updateArticleDto: UpdateArticleDto,
+    @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
-    return this.articlesService.update(id, updateArticleDto);
+    return this.articlesService.update(
+      articleId,
+      updateArticleDto,
+      currentUser.userId,
+    );
   }
 
   @UseGuards(JwtAuthGuard)

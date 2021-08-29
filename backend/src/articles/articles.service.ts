@@ -41,6 +41,15 @@ export class ArticlesService {
         {
           usersId: [userId],
         },
+      )
+      .leftJoinAndMapOne(
+        'profile.following',
+        'profile.followedUsers',
+        'followedUsers',
+        'followedUsers.id IN (:...usersId)',
+        {
+          usersId: [userId],
+        },
       );
 
   async findAll(userId: string) {
@@ -62,7 +71,6 @@ export class ArticlesService {
         author,
       })
       .getManyAndCount();
-
     return {
       articles: classToPlain(articles),
       articlesCount,
@@ -84,9 +92,9 @@ export class ArticlesService {
     };
   }
 
-  async findOne(userId: string, slug: string) {
+  async findOne(userId: string, articleId: string) {
     const article = await this.commomArticlesQueryBuilder(userId)
-      .where({ slug })
+      .where({ slug: articleId })
       .getOne();
     return { article: classToPlain(article) };
   }
@@ -95,8 +103,16 @@ export class ArticlesService {
     return this.articlesRepository.findOneOrFail(id);
   }
 
-  update(id: string, updateArticleDto: UpdateArticleDto) {
-    return this.articlesRepository.update(id, updateArticleDto);
+  async update(
+    articleId: string,
+    updateArticleDto: UpdateArticleDto,
+    userId: string,
+  ) {
+    await this.articlesRepository.update(articleId, updateArticleDto);
+    const article = await this.commomArticlesQueryBuilder(userId)
+      .where({ slug: articleId })
+      .getOne();
+    return { article: classToPlain(article) };
   }
 
   async remove(id: string) {

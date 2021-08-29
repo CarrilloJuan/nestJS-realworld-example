@@ -26,8 +26,11 @@ export class ProfilesController {
   })
   @UseGuards(JwtAuthGuard)
   @Get(':username')
-  async findProfile(@Param('username') username: string) {
-    return this.profilesService.findOne(username);
+  async findProfile(
+    @Param('username') username: string,
+    @CurrentUserDecorator() currentUser: CurrentUser,
+  ) {
+    return this.profilesService.findOne(username, currentUser.userId);
   }
 
   @UseGuards(JwtAuthGuard)
