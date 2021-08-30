@@ -38,7 +38,7 @@ export class ArticlesService {
     };
   }
 
-  commomArticlesQueryBuilder = (userId: string) =>
+  commomArticlesQueryBuilder = (userId: string, limit = 20, offset = 0) =>
     this.connection
       .getRepository(Article)
       .createQueryBuilder('article')
@@ -63,7 +63,9 @@ export class ArticlesService {
         {
           usersId: [userId],
         },
-      );
+      )
+      .skip(offset)
+      .take(limit);
 
   async findAll(userId: string) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
@@ -87,9 +89,16 @@ export class ArticlesService {
     return this.articlesRepository.findOneOrFail(id);
   }
 
-  async findByAuthor(author: string, userId: string) {
+  async findByAuthor(
+    author: string,
+    userId: string,
+    limit?: number,
+    offset?: number,
+  ) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
       userId,
+      limit,
+      offset,
     )
       .where('author.username = :author', {
         author,
@@ -101,9 +110,16 @@ export class ArticlesService {
     };
   }
 
-  async findByTag(tag: string, userId: string) {
+  async findByTag(
+    tag: string,
+    userId: string,
+    limit?: number,
+    offset?: number,
+  ) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
       userId,
+      limit,
+      offset,
     )
       .where('tags.name IN (:...tags)', {
         tags: [tag],
@@ -116,9 +132,16 @@ export class ArticlesService {
     };
   }
 
-  async favoritedByUser(user: string, userId: string) {
+  async favoritedByUser(
+    user: string,
+    userId: string,
+    limit?: number,
+    offset?: number,
+  ) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
       userId,
+      limit,
+      offset,
     )
       .where('favoritedUsers.username IN (:...users)', {
         users: [user],
@@ -131,9 +154,11 @@ export class ArticlesService {
     };
   }
 
-  async findByfeed(userId: string) {
+  async findByfeed(userId: string, limit?: number, offset?: number) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
       userId,
+      limit,
+      offset,
     )
       .where('followedUsers.id IN (:...usersId)', {
         usersId: [userId],

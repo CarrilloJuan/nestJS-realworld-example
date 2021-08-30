@@ -32,8 +32,12 @@ export class ArticlesController {
 
   @UseGuards(JwtAuthGuard)
   @Get('feed')
-  findByFeed(@CurrentUserDecorator() currentUser: CurrentUser) {
-    return this.articlesService.findByfeed(currentUser.userId);
+  findByFeed(
+    @Query('limit') limit: number,
+    @Query('offset') offset: number,
+    @CurrentUserDecorator() currentUser: CurrentUser,
+  ) {
+    return this.articlesService.findByfeed(currentUser.userId, limit, offset);
   }
 
   @UseGuards(JwtAuthGuard)
