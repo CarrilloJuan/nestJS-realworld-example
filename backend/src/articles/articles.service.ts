@@ -7,6 +7,7 @@ import { Connection, Repository } from 'typeorm';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
+import { Tag } from './entities/tag.entity';
 
 @Injectable()
 export class ArticlesService {
@@ -18,12 +19,23 @@ export class ArticlesService {
   ) {}
 
   async create(userId: string, createArticleDto: CreateArticleDto) {
-    const newArticle = this.articlesRepository.create(createArticleDto);
     const author = await this.usersService.findOneOrFail(userId);
-    if (author) {
-      newArticle.author = author.id;
-    }
-    return this.articlesRepository.save(newArticle);
+    const { tagList, ...articleData } = createArticleDto;
+
+    const tags = await this.connection
+      .getRepository(Tag)
+      .createQueryBuilder('tag')
+      .where('tag.name IN (:...tagList)', {
+        tagList: [...tagList],
+      })
+      .getMany();
+    const newArticle = this.articlesRepository.create(articleData);
+    newArticle.author = author;
+    newArticle.tags = [...tags];
+    const articleCreated = await this.articlesRepository.save(newArticle);
+    return {
+      article: classToPlain(articleCreated),
+    };
   }
 
   commomArticlesQueryBuilder = (userId: string) =>
@@ -31,6 +43,7 @@ export class ArticlesService {
       .getRepository(Article)
       .createQueryBuilder('article')
       .leftJoinAndSelect('article.author', 'author')
+      .leftJoinAndSelect('article.tags', 'tags')
       .leftJoinAndSelect('author.profile', 'profile')
       .leftJoinAndSelect('author.favoriteArticles', 'favoriteArticles')
       .leftJoinAndMapOne(
@@ -63,6 +76,17 @@ export class ArticlesService {
     };
   }
 
+  async findOne(userId: string, articleId: string) {
+    const article = await this.commomArticlesQueryBuilder(userId)
+      .where({ slug: articleId })
+      .getOne();
+    return { article: classToPlain(article) };
+  }
+
+  findOneOrFail(id: string) {
+    return this.articlesRepository.findOneOrFail(id);
+  }
+
   async findByAuthor(author: string, userId: string) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
       userId,
@@ -71,6 +95,21 @@ export class ArticlesService {
         author,
       })
       .getManyAndCount();
+    return {
+      articles: classToPlain(articles),
+      articlesCount,
+    };
+  }
+
+  async findByTag(tag: string, userId: string) {
+    const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
+      userId,
+    )
+      .where('tags.name IN (:...tags)', {
+        tags: [tag],
+      })
+      .getManyAndCount();
+
     return {
       articles: classToPlain(articles),
       articlesCount,
@@ -92,15 +131,19 @@ export class ArticlesService {
     };
   }
 
-  async findOne(userId: string, articleId: string) {
-    const article = await this.commomArticlesQueryBuilder(userId)
-      .where({ slug: articleId })
-      .getOne();
-    return { article: classToPlain(article) };
-  }
+  async findByfeed(userId: string) {
+    const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
+      userId,
+    )
+      .where('followedUsers.id IN (:...usersId)', {
+        usersId: [userId],
+      })
+      .getManyAndCount();
 
-  findOneOrFail(id: string) {
-    return this.articlesRepository.findOneOrFail(id);
+    return {
+      articles: classToPlain(articles),
+      articlesCount,
+    };
   }
 
   async update(

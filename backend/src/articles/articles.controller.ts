@@ -31,10 +31,17 @@ export class ArticlesController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('feed')
+  findByFeed(@CurrentUserDecorator() currentUser: CurrentUser) {
+    return this.articlesService.findByfeed(currentUser.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get()
   findArticles(
     @Query('author') author: string,
     @Query('favorited') favoritedByUser: string,
+    @Query('tag') tag: string,
     @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
     const { userId } = currentUser;
@@ -43,6 +50,9 @@ export class ArticlesController {
     }
     if (favoritedByUser) {
       return this.articlesService.favoritedByUser(favoritedByUser, userId);
+    }
+    if (tag) {
+      return this.articlesService.findByTag(tag, userId);
     }
     return this.articlesService.findAll(userId);
   }

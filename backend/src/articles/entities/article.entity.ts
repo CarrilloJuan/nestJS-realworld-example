@@ -8,11 +8,13 @@ import {
   UpdateDateColumn,
   JoinColumn,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
-import { Exclude, Transform } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 
 import { Comment } from 'src/comments/entities/comment.entity';
 import { User } from 'src/users/entities/user.entity';
+import { Tag } from './tag.entity';
 
 @Entity()
 export class Article {
@@ -27,9 +29,6 @@ export class Article {
 
   @Column({ type: 'text' })
   body: string;
-
-  @Column('simple-array', { name: 'tag_list' })
-  tagList: string[];
 
   @CreateDateColumn({
     name: 'create_at',
@@ -59,7 +58,7 @@ export class Article {
     };
   })
   @ManyToOne(() => User, (user) => user.id)
-  author: string;
+  author: User;
 
   @OneToMany(() => Comment, (comments) => comments.id)
   @JoinColumn()
@@ -68,6 +67,12 @@ export class Article {
   @Exclude({ toPlainOnly: true })
   @ManyToMany(() => User, (user) => user.favoriteArticles)
   favoritedUsers: User[];
+
+  @Transform(({ value: tags }) => tags.map(({ name }) => name))
+  @Expose({ name: 'tagList' })
+  @ManyToMany(() => Tag, (tag) => tag.articles)
+  @JoinTable()
+  tags: Tag[];
 
   @Exclude({ toPlainOnly: true })
   favoritedUserIds: string[];
