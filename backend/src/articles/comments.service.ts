@@ -22,6 +22,7 @@ export class CommentsService {
   ) {
     const newComment = this.commentsRepository.create(commentData);
     const autor = await this.usersService.findOneOrFail(userId);
+
     const article = await this.articlesService.findOneOrFail(articleId);
     newComment.autor = autor;
     newComment.article = article;

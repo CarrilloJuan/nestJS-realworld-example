@@ -180,6 +180,7 @@ export class ArticlesService {
     const article = await this.commomArticlesQueryBuilder(userId)
       .where({ slug: articleId })
       .getOne();
+
     return { article: classToPlain(article) };
   }
 

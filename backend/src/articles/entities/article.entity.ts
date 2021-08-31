@@ -1,23 +1,23 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
   ManyToOne,
   OneToMany,
   PrimaryColumn,
-  UpdateDateColumn,
   JoinColumn,
   ManyToMany,
   JoinTable,
 } from 'typeorm';
 import { Exclude, Expose, Transform } from 'class-transformer';
 
-import { Comment } from 'src/comments/entities/comment.entity';
+import { Comment } from 'src/articles/entities/comment.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Tag } from './tag.entity';
+import { UpsertDate } from './upsert-date.entity';
+import { transformAuthorProperty } from '../helpers';
 
 @Entity()
-export class Article {
+export class Article extends UpsertDate {
   @PrimaryColumn()
   slug: string;
 
@@ -30,33 +30,10 @@ export class Article {
   @Column({ type: 'text' })
   body: string;
 
-  @CreateDateColumn({
-    name: 'create_at',
-    type: 'timestamptz',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  createAt: Date;
-
-  @UpdateDateColumn({
-    name: 'update_at',
-    type: 'timestamptz',
-    default: () => 'CURRENT_TIMESTAMP',
-  })
-  updateAt: Date;
-
   @Column({ default: 0, name: 'favorites_count' })
   favoritesCount: number;
 
-  // TODO: Extract to helper, go out of the entity, try leftJoinAndMap
-  @Transform(({ value: author }) => {
-    const { profile: { id = '', following = '', ...profileProps } = {} } =
-      author;
-    return {
-      username: author.username,
-      ...profileProps,
-      following: !!following,
-    };
-  })
+  @Transform(transformAuthorProperty)
   @ManyToOne(() => User, (user) => user.id)
   author: User;
 
@@ -65,10 +42,12 @@ export class Article {
   comments: Comment[];
 
   @Exclude({ toPlainOnly: true })
-  @ManyToMany(() => User, (user) => user.favoriteArticles)
+  @ManyToMany(() => User, (user) => user.favoriteArticles, {
+    onDelete: 'CASCADE',
+  })
   favoritedUsers: User[];
 
-  @Transform(({ value: tags }) => tags.map(({ name }) => name))
+  @Transform(({ value: tags = [] }) => tags.map(({ name }) => name))
   @Expose({ name: 'tagList' })
   @ManyToMany(() => Tag, (tag) => tag.articles)
   @JoinTable()

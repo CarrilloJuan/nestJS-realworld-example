@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CurrentUserDecorator } from 'src/users/current-user.decorator';
@@ -16,12 +17,13 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { CurrentUser } from '../auth/models/current-user';
 import { TransformCommentResponse } from './transform-comment-response.interceptor';
 
+@UseInterceptors(ClassSerializerInterceptor)
+@UseInterceptors(TransformCommentResponse)
+@UseGuards(JwtAuthGuard)
 @Controller('articles')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  @UseInterceptors(TransformCommentResponse)
-  @UseGuards(JwtAuthGuard)
   @Post(':slug/comments')
   create(
     @Param('slug') articleId: string,
@@ -35,22 +37,16 @@ export class CommentsController {
     );
   }
 
-  @UseInterceptors(TransformCommentResponse)
-  @UseGuards(JwtAuthGuard)
   @Get(':slug/comments')
   findAll() {
     return this.commentsService.findAll();
   }
 
-  @UseInterceptors(TransformCommentResponse)
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
+  @Get('comments/:id')
   findOne(@Param('id') id: number) {
     return this.commentsService.findOne(id);
   }
 
-  @UseInterceptors(TransformCommentResponse)
-  @UseGuards(JwtAuthGuard)
   @Delete(':slug/comments/:id')
   remove(@Param('id') id: number) {
     return this.commentsService.remove(id);

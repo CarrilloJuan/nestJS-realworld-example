@@ -13,7 +13,7 @@ import {
 
 import { Exclude } from 'class-transformer';
 import { Article } from 'src/articles/entities/article.entity';
-import { Comment } from 'src/comments/entities/comment.entity';
+import { Comment } from 'src/articles/entities/comment.entity';
 import { Profile } from './profile.entity';
 
 @Entity()
