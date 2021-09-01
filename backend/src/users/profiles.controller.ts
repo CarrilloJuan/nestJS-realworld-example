@@ -9,12 +9,15 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/models/current-user';
 import { CurrentUserDecorator } from './current-user.decorator';
 import { ProfilesService } from './profiles.service';
 import { TransformerProfileResponse } from './transform-profile-response.interceptor';
 
+@ApiTags('Profiles')
 @UseInterceptors(ClassSerializerInterceptor)
 @UseInterceptors(TransformerProfileResponse)
 @Controller('profiles')

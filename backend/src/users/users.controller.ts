@@ -7,6 +7,8 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -16,15 +18,16 @@ import { TransformerUserResponse } from './transform-user-response.interceptor';
 import { CurrentUserDecorator } from './current-user.decorator';
 import { CurrentUser } from '../auth/models/current-user';
 
+@ApiTags('Users')
 @UseInterceptors(TransformerUserResponse)
-@Controller()
+@Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
   ) {}
 
-  @Post('users')
+  @Post()
   async create(@Body('user') userData: CreateUserDto) {
     const user = await this.usersService.create(userData);
     if (user) {

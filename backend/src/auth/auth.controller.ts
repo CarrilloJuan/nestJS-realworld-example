@@ -6,6 +6,8 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { TransformerUserResponse } from './transformer-user-response.interceptor';
 import { CurrentUserDecorator } from 'src/users/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
@@ -14,6 +16,7 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { CurrentUser } from './models/current-user';
 
+@ApiTags('Auth')
 @Controller()
 export class AuthController {
   constructor(private authService: AuthService) {}

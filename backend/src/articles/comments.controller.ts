@@ -9,6 +9,8 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CurrentUserDecorator } from 'src/users/current-user.decorator';
 import { CommentsService } from './comments.service';
@@ -17,6 +19,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { CurrentUser } from '../auth/models/current-user';
 import { TransformCommentResponse } from './transform-comment-response.interceptor';
 
+@ApiTags('Articles')
 @UseInterceptors(ClassSerializerInterceptor)
 @UseInterceptors(TransformCommentResponse)
 @UseGuards(JwtAuthGuard)
