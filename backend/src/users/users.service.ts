@@ -7,7 +7,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 import { User } from './entities/user.entity';
-import { userQuery } from './models/user-query';
+import { userQuery } from './interfaces/user-query';
 import { Profile } from './entities/profile.entity';
 import { extractProfileProperties, extractUserProperties } from './helpers';
 
@@ -38,8 +38,8 @@ export class UsersService {
       await queryRunner.commitTransaction();
       return newUser;
     } catch (err) {
-      console.log(err);
       await queryRunner.rollbackTransaction();
+      throw err;
     } finally {
       await queryRunner.release();
     }

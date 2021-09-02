@@ -18,7 +18,7 @@ export class Comment extends UpsertDate {
 
   @Transform(transformAuthorProperty)
   @ManyToOne(() => User, (user) => user.id)
-  autor: User;
+  author: User;
 
   @Exclude({ toPlainOnly: true })
   @ManyToOne(() => Article, (article) => article.slug)

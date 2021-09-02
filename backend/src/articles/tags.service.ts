@@ -17,6 +17,8 @@ export class TagsService {
         .insert()
         .into(Tag)
         .values([...tags])
+        .orIgnore()
+        .returning('*')
         .execute();
     }
     return this.connection
@@ -25,6 +27,8 @@ export class TagsService {
       .insert()
       .into(Tag)
       .values({ name: tag })
+      .orIgnore()
+      .returning('*')
       .execute();
   }
 
@@ -35,5 +39,35 @@ export class TagsService {
       .getMany();
 
     return { tags: tags.map(({ name }) => name) };
+  }
+
+  async createOrFoundTag(tagList: string[]) {
+    const tags = tagList.map((t) => ({
+      name: t,
+    }));
+
+    const { raw: result } = await this.connection
+      .getRepository(Tag)
+      .createQueryBuilder()
+      .insert()
+      .into(Tag)
+      .values([...tags])
+      .orIgnore()
+      .returning('*')
+      .execute();
+
+    const mergedTagsNames = [...tagList, ...result.map(({ name }) => name)];
+    const mergedNamesWithoutDuplicates = [...new Set(mergedTagsNames)];
+
+    const tagsFoundPromises: Promise<Tag>[] = mergedNamesWithoutDuplicates.map(
+      (tag) =>
+        this.connection
+          .getRepository(Tag)
+          .createQueryBuilder('tag')
+          .where('tag.name = :tag', { tag })
+          .getOneOrFail(),
+    );
+
+    return Promise.all(tagsFoundPromises);
   }
 }

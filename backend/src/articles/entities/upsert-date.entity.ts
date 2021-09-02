@@ -3,15 +3,15 @@ import { CreateDateColumn, UpdateDateColumn } from 'typeorm';
 export abstract class UpsertDate {
   @CreateDateColumn({
     name: 'create_at',
-    type: 'timestamptz',
+    type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  createAt: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({
     name: 'update_at',
-    type: 'timestamptz',
+    type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  updateAt: Date;
+  updatedAt: Date;
 }

@@ -48,7 +48,7 @@ export class User {
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  createAt: Date;
+  createdAt: Date;
 
   @Exclude()
   @UpdateDateColumn({
@@ -57,7 +57,7 @@ export class User {
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  updateAt: Date;
+  updatedAt: Date;
 
   @Exclude({ toPlainOnly: true })
   @Column({ nullable: true, name: 'profile_id' })

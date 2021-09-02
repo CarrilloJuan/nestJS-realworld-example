@@ -15,23 +15,22 @@ export class CommentsService {
     private articlesService: ArticlesService,
   ) {}
 
-  async create(
-    userId: string,
-    articleId: string,
-    commentData: CreateCommentDto,
-  ) {
+  async create(userId: string, slug: string, commentData: CreateCommentDto) {
     const newComment = this.commentsRepository.create(commentData);
-    const autor = await this.usersService.findOneOrFail(userId);
+    const author = await this.usersService.findOneOrFail(userId);
 
-    const article = await this.articlesService.findOneOrFail(articleId);
-    newComment.autor = autor;
+    const article = await this.articlesService.findOneOrFail({
+      where: { slug },
+    });
+    newComment.author = author;
     newComment.article = article;
+
     return this.commentsRepository.save(newComment);
   }
 
   findAll() {
     return this.commentsRepository.find({
-      relations: ['article', 'autor'],
+      relations: ['article', 'author'],
     });
   }
 

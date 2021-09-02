@@ -37,8 +37,9 @@ export class ProfilesService {
     const userToFollow = await this.userRepository.findOneOrFail({
       where: { username },
     });
+
     const profileToFollow = await this.profileRepository.findOneOrFail({
-      relations: ['followedUsers'],
+      relations: ['followedUsers', 'user'],
       where: { id: userToFollow.profileId },
     });
 
@@ -68,7 +69,7 @@ export class ProfilesService {
       where: { username },
     });
     const profileToUnfollow = await this.profileRepository.findOneOrFail({
-      relations: ['followedUsers'],
+      relations: ['followedUsers', 'user'],
       where: { id: userToUnFollow.profileId },
     });
 

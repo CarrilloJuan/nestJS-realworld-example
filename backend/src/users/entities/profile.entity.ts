@@ -20,7 +20,6 @@ export class Profile {
   @Column({ nullable: true, default: null })
   image: string;
 
-  @Exclude({ toPlainOnly: true })
   @OneToOne(() => User, (user) => user.profile)
   user: User;
 

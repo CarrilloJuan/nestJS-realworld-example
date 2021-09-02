@@ -3,9 +3,9 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Post,
-  SerializeOptions,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -24,9 +24,6 @@ import { TransformerProfileResponse } from './transform-profile-response.interce
 export class ProfilesController {
   constructor(private readonly profilesService: ProfilesService) {}
 
-  @SerializeOptions({
-    groups: ['profile'],
-  })
   @UseGuards(JwtAuthGuard)
   @Get(':username')
   async findProfile(
@@ -37,6 +34,7 @@ export class ProfilesController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
   @Post(':username/follow')
   favoriteArticle(
     @Param('username') username: string,

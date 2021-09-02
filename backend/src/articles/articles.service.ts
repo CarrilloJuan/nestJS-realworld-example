@@ -7,12 +7,14 @@ import { Connection, Repository } from 'typeorm';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { Article } from './entities/article.entity';
-import { Tag } from './entities/tag.entity';
+import { FindArticle } from './interfaces/find-article';
+import { TagsService } from './tags.service';
 
 @Injectable()
 export class ArticlesService {
   constructor(
     private usersService: UsersService,
+    private tagsService: TagsService,
     @InjectRepository(Article)
     private articlesRepository: Repository<Article>,
     private connection: Connection,
@@ -20,25 +22,27 @@ export class ArticlesService {
 
   async create(userId: string, createArticleDto: CreateArticleDto) {
     const author = await this.usersService.findOneOrFail(userId);
-    const { tagList, ...articleData } = createArticleDto;
+    const { tagList = [], ...articleData } = createArticleDto;
 
-    const tags = await this.connection
-      .getRepository(Tag)
-      .createQueryBuilder('tag')
-      .where('tag.name IN (:...tagList)', {
-        tagList: [...tagList],
-      })
-      .getMany();
     const newArticle = this.articlesRepository.create(articleData);
     newArticle.author = author;
-    newArticle.tags = [...tags];
+
+    if (tagList.length > 0) {
+      const tags = await this.tagsService.createOrFoundTag(tagList);
+      newArticle.tags = tags;
+    }
+
     const articleCreated = await this.articlesRepository.save(newArticle);
     return {
       article: classToPlain(articleCreated),
     };
   }
 
-  commomArticlesQueryBuilder = (userId: string, limit = 20, offset = 0) =>
+  commomArticlesQueryBuilder = ({
+    userId,
+    limit = 20,
+    offset = 0,
+  }: FindArticle) =>
     this.connection
       .getRepository(Article)
       .createQueryBuilder('article')
@@ -55,6 +59,11 @@ export class ArticlesService {
           usersId: [userId],
         },
       )
+      .loadRelationCountAndMap(
+        'article.favoritesCount',
+        'article.favoritedUsers',
+        'followedUsersCount',
+      )
       .leftJoinAndMapOne(
         'profile.following',
         'profile.followedUsers',
@@ -67,9 +76,9 @@ export class ArticlesService {
       .skip(offset)
       .take(limit);
 
-  async findAll(userId: string) {
+  async findAll(options: FindArticle) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
-      userId,
+      options,
     ).getManyAndCount();
 
     return {
@@ -79,26 +88,19 @@ export class ArticlesService {
   }
 
   async findOne(userId: string, articleId: string) {
-    const article = await this.commomArticlesQueryBuilder(userId)
+    const article = await this.commomArticlesQueryBuilder({ userId })
       .where({ slug: articleId })
       .getOne();
     return { article: classToPlain(article) };
   }
 
-  findOneOrFail(id: string) {
-    return this.articlesRepository.findOneOrFail(id);
+  findOneOrFail(query) {
+    return this.articlesRepository.findOneOrFail(query);
   }
 
-  async findByAuthor(
-    author: string,
-    userId: string,
-    limit?: number,
-    offset?: number,
-  ) {
+  async findByAuthor(author: string, options: FindArticle) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
-      userId,
-      limit,
-      offset,
+      options,
     )
       .where('author.username = :author', {
         author,
@@ -110,16 +112,9 @@ export class ArticlesService {
     };
   }
 
-  async findByTag(
-    tag: string,
-    userId: string,
-    limit?: number,
-    offset?: number,
-  ) {
+  async findByTag(tag: string, options: FindArticle) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
-      userId,
-      limit,
-      offset,
+      options,
     )
       .where('tags.name IN (:...tags)', {
         tags: [tag],
@@ -132,16 +127,9 @@ export class ArticlesService {
     };
   }
 
-  async favoritedByUser(
-    user: string,
-    userId: string,
-    limit?: number,
-    offset?: number,
-  ) {
+  async favoritedByUser(user: string, options: FindArticle) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
-      userId,
-      limit,
-      offset,
+      options,
     )
       .where('favoritedUsers.username IN (:...users)', {
         users: [user],
@@ -154,14 +142,12 @@ export class ArticlesService {
     };
   }
 
-  async findByfeed(userId: string, limit?: number, offset?: number) {
+  async findByfeed(options: FindArticle) {
     const [articles, articlesCount] = await this.commomArticlesQueryBuilder(
-      userId,
-      limit,
-      offset,
+      options,
     )
       .where('followedUsers.id IN (:...usersId)', {
-        usersId: [userId],
+        usersId: [options.userId],
       })
       .getManyAndCount();
 
@@ -172,13 +158,32 @@ export class ArticlesService {
   }
 
   async update(
-    articleId: string,
+    slug: string,
     updateArticleDto: UpdateArticleDto,
     userId: string,
   ) {
-    await this.articlesRepository.update(articleId, updateArticleDto);
-    const article = await this.commomArticlesQueryBuilder(userId)
-      .where({ slug: articleId })
+    const { tagList = [], ...articleData } = updateArticleDto;
+
+    const { affected: articleUpdated, raw } = await this.connection
+      .createQueryBuilder()
+      .update(Article)
+      .set(articleData)
+      .where('slug = :slug', { slug })
+      .returning('id')
+      .execute();
+
+    if (articleUpdated && tagList.length > 0) {
+      const articleUpdatedId = raw[0].id;
+      const tagsIds = await this.tagsService.createOrFoundTag(tagList);
+      await this.connection
+        .createQueryBuilder()
+        .relation(Article, 'tags')
+        .of(articleUpdatedId)
+        .add(tagsIds);
+    }
+
+    const article = await this.commomArticlesQueryBuilder({ userId })
+      .where({ slug })
       .getOne();
 
     return { article: classToPlain(article) };
@@ -189,77 +194,58 @@ export class ArticlesService {
   }
 
   async favoriteArticle(slug: string, userId: string) {
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const user = await queryRunner.manager.findOneOrFail(User, {
-        relations: ['favoriteArticles'],
-        where: [{ id: userId }],
-      });
+    const user = await this.connection.getRepository(User).findOneOrFail({
+      relations: ['favoriteArticles'],
+      where: [{ id: userId }],
+    });
 
-      const isFavoriteArticle = user.favoriteArticles.find(
-        (article) => article.slug === slug,
-      );
+    const isFavoriteArticle = user.favoriteArticles.find(
+      (article) => article.slug === slug,
+    );
 
-      if (!isFavoriteArticle) {
-        const article = await queryRunner.manager.findOneOrFail(Article, {
-          relations: ['favoritedUsers'],
-          where: { slug },
-        });
-        article.favoritedUsers.push(user);
-        article.favoritesCount += 1;
-        user.favoriteArticles.push(article);
-        await queryRunner.manager.save(article);
-        await queryRunner.manager.save(user);
-      }
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      console.log(err);
-      await queryRunner.rollbackTransaction();
-    } finally {
-      await queryRunner.release();
+    const article = await this.articlesRepository.findOneOrFail({
+      where: { slug },
+    });
+
+    if (!isFavoriteArticle) {
+      await this.connection
+        .createQueryBuilder()
+        .relation(Article, 'favoritedUsers')
+        .of(article)
+        .add(user);
     }
+
+    const favoritedArticle = await this.commomArticlesQueryBuilder({ userId })
+      .where({ slug })
+      .getOne();
+    return { article: classToPlain(favoritedArticle) };
   }
 
   async unFavoriteArticle(slug: string, userId: string) {
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const user = await queryRunner.manager.findOneOrFail(User, {
-        relations: ['favoriteArticles'],
-        where: [{ id: userId }],
-      });
+    const user = await this.connection.getRepository(User).findOneOrFail({
+      relations: ['favoriteArticles'],
+      where: [{ id: userId }],
+    });
 
-      const isFavoriteArticle = user.favoriteArticles.find(
-        (article) => article.slug === slug,
-      );
+    const isFavoriteArticle = user.favoriteArticles.find(
+      (article) => article.slug === slug,
+    );
 
-      if (isFavoriteArticle) {
-        const article = await queryRunner.manager.findOneOrFail(Article, {
-          relations: ['favoritedUsers'],
-          where: { slug },
-        });
-        article.favoritedUsers = article.favoritedUsers.filter(
-          (user) => user.id !== userId,
-        );
+    const article = await this.commomArticlesQueryBuilder({ userId })
+      .where({ slug })
+      .getOne();
 
-        article.favoritesCount -= 1;
-
-        user.favoriteArticles = user.favoriteArticles.filter(
-          (article) => article.slug !== slug,
-        );
-
-        await queryRunner.manager.save(article);
-        await queryRunner.manager.save(user);
-      }
-      await queryRunner.commitTransaction();
-    } catch (err) {
-      console.log(err);
-      await queryRunner.rollbackTransaction();
-    } finally {
-      await queryRunner.release();
+    if (isFavoriteArticle) {
+      await this.connection
+        .createQueryBuilder()
+        .relation(Article, 'favoritedUsers')
+        .of(article)
+        .remove(user);
     }
+
+    const unFavoritedArticle = await this.commomArticlesQueryBuilder({ userId })
+      .where({ slug })
+      .getOne();
+    return { article: classToPlain(unFavoritedArticle) };
   }
 }

@@ -20,14 +20,14 @@ import { CurrentUser } from '../auth/models/current-user';
 
 @ApiTags('Users')
 @UseInterceptors(TransformerUserResponse)
-@Controller('users')
+@Controller()
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
   ) {}
 
-  @Post()
+  @Post('users')
   async create(@Body('user') userData: CreateUserDto) {
     const user = await this.usersService.create(userData);
     if (user) {

@@ -29,19 +29,19 @@ export class CommentsController {
 
   @Post(':slug/comments')
   create(
-    @Param('slug') articleId: string,
+    @Param('slug') slug: string,
     @CurrentUserDecorator() currentUser: CurrentUser,
     @Body('comment') createCommentDto: CreateCommentDto,
   ) {
     return this.commentsService.create(
       currentUser.userId,
-      articleId,
+      slug,
       createCommentDto,
     );
   }
 
   @Get(':slug/comments')
-  findAll() {
+  findAllComments() {
     return this.commentsService.findAll();
   }
 

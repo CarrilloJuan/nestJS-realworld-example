@@ -18,6 +18,11 @@ export class TransformerProfileResponse<T>
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<userResponse<T>> {
-    return next.handle().pipe(map((data) => ({ profile: { ...data } })));
+    return next.handle().pipe(
+      map((data) => {
+        const { user, ...profile } = data;
+        return { profile: { ...profile, username: user.username } };
+      }),
+    );
   }
 }

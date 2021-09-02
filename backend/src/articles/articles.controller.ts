@@ -40,7 +40,11 @@ export class ArticlesController {
     @Query('offset') offset: number,
     @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
-    return this.articlesService.findByfeed(currentUser.userId, limit, offset);
+    return this.articlesService.findByfeed({
+      userId: currentUser.userId,
+      limit,
+      offset,
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -49,19 +53,19 @@ export class ArticlesController {
     @Query('author') author: string,
     @Query('favorited') favoritedByUser: string,
     @Query('tag') tag: string,
-    @CurrentUserDecorator() currentUser: CurrentUser,
+    @CurrentUserDecorator() currentUser?: CurrentUser,
   ) {
-    const { userId } = currentUser;
+    const { userId } = currentUser || {};
     if (author) {
-      return this.articlesService.findByAuthor(author, userId);
+      return this.articlesService.findByAuthor(author, { userId });
     }
     if (favoritedByUser) {
-      return this.articlesService.favoritedByUser(favoritedByUser, userId);
+      return this.articlesService.favoritedByUser(favoritedByUser, { userId });
     }
     if (tag) {
-      return this.articlesService.findByTag(tag, userId);
+      return this.articlesService.findByTag(tag, { userId });
     }
-    return this.articlesService.findAll(userId);
+    return this.articlesService.findAll({ userId });
   }
 
   @UseGuards(JwtAuthGuard)

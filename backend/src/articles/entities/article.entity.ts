@@ -3,10 +3,10 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
-  PrimaryColumn,
   JoinColumn,
   ManyToMany,
   JoinTable,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Exclude, Expose, Transform } from 'class-transformer';
 
@@ -18,10 +18,13 @@ import { transformAuthorProperty } from '../helpers';
 
 @Entity()
 export class Article extends UpsertDate {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column({ type: 'varchar' })
   slug: string;
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ type: 'varchar' })
   title: string;
 
   @Column({ type: 'text' })
@@ -29,9 +32,6 @@ export class Article extends UpsertDate {
 
   @Column({ type: 'text' })
   body: string;
-
-  @Column({ default: 0, name: 'favorites_count' })
-  favoritesCount: number;
 
   @Transform(transformAuthorProperty)
   @ManyToOne(() => User, (user) => user.id)
@@ -56,6 +56,9 @@ export class Article extends UpsertDate {
   @Exclude({ toPlainOnly: true })
   favoritedUserIds: string[];
 
+  @Transform(({ value }) => value)
+  favoritesCount = 0;
+
   @Transform(({ value }) => !!value)
-  favorited: boolean;
+  favorited = false;
 }

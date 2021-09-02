@@ -26,7 +26,7 @@ export class TransformerUserResponse<T>
       '',
     );
     return next.handle().pipe(
-      map(({ profile, ...data }) => {
+      map(({ profile = {}, ...data }) => {
         return { user: { token, ...data, ...profile } };
       }),
     );
