@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { Observable, map } from 'rxjs';
-import { jwtConstants } from 'src/auth/constants';
+import { jwtConstants } from 'src/auth/constants/constants';
 
 export interface userResponse<T> {
   user: T;

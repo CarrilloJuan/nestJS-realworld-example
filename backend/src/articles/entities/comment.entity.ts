@@ -4,7 +4,7 @@ import { User } from 'src/users/entities/user.entity';
 import { Article } from 'src/articles/entities/article.entity';
 import { Exclude, Transform } from 'class-transformer';
 import { UpsertDate } from './upsert-date.entity';
-import { transformAuthorProperty } from '../helpers';
+import { transformAuthorProperty } from '../helpers/helpers';
 
 @Entity()
 export class Comment extends UpsertDate {

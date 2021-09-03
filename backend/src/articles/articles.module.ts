@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { ArticlesService } from './articles.service';
-import { ArticlesController } from './articles.controller';
+import { ArticlesService } from './services/articles.service';
+import { ArticlesController } from './controllers/articles.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Article } from './entities/article.entity';
 import { UsersModule } from 'src/users/users.module';
-import { TagsController } from './tags.controller';
-import { TagsService } from './tags.service';
+import { TagsController } from './controllers/tags.controller';
+import { TagsService } from './services/tags.service';
 import { Tag } from './entities/tag.entity';
-import { CommentsController } from './comments.controller';
+import { CommentsController } from './controllers/comments.controller';
 import { Comment } from './entities/comment.entity';
-import { CommentsService } from './comments.service';
+import { CommentsService } from './services/comments.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Article, Tag, Comment]), UsersModule],

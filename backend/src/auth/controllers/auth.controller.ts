@@ -8,13 +8,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { TransformerUserResponse } from './transformer-user-response.interceptor';
-import { CurrentUserDecorator } from 'src/users/current-user.decorator';
+import { TransformerUserResponse } from '../interceptors/transformer-user-response.interceptor';
+import { CurrentUserDecorator } from 'src/users/helpers/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
-import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './local-auth.guard';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { CurrentUser } from './models/current-user';
+import { AuthService } from '../services/auth.service';
+import { LocalAuthGuard } from '../services/passport/local-auth.guard';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { CurrentUser } from '../interfaces/current-user';
 
 @ApiTags('Auth')
 @Controller()

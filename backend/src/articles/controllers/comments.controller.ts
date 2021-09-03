@@ -11,13 +11,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { CurrentUserDecorator } from 'src/users/current-user.decorator';
-import { CommentsService } from './comments.service';
-import { CreateCommentDto } from './dto/create-comment.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { CurrentUserDecorator } from 'src/users/helpers/current-user.decorator';
+import { CommentsService } from '../services/comments.service';
+import { CreateCommentDto } from '../dto/create-comment.dto';
 
-import { CurrentUser } from '../auth/models/current-user';
-import { TransformCommentResponse } from './transform-comment-response.interceptor';
+import { CurrentUser } from '../../auth/interfaces/current-user';
+import { TransformCommentResponse } from '../interceptors/transform-comment-response.interceptor';
 
 @ApiTags('Articles')
 @UseInterceptors(ClassSerializerInterceptor)

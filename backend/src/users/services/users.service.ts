@@ -3,13 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
 
-import { User } from './entities/user.entity';
-import { userQuery } from './interfaces/user-query';
-import { Profile } from './entities/profile.entity';
-import { extractProfileProperties, extractUserProperties } from './helpers';
+import { User } from '../entities/user.entity';
+import { userQuery } from '../interfaces/user-query';
+import { Profile } from '../entities/profile.entity';
+import { splitUpdateProperties } from '../helpers';
 
 @Injectable()
 export class UsersService {
@@ -55,24 +55,30 @@ export class UsersService {
     return this.usersRepository.findOneOrFail(id);
   }
 
-  async update(userId: string, changes: UpdateUserDto) {
+  async update(userId: string, updateUserDto: UpdateUserDto) {
     const user = await this.usersRepository.findOne(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    if ('password' in changes) {
-      changes.password = await bcrypt.hash(changes.password, 10);
+    if ('password' in updateUserDto) {
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
     }
-    const profileChanges = extractProfileProperties(changes, user);
-    const userChanges = extractUserProperties(changes, user);
+    const { userProperties, profileProperties } = splitUpdateProperties(
+      updateUserDto,
+      user,
+    );
 
     await this.connection.transaction(async (manager) => {
-      if (userChanges) {
-        await manager.update(User, { id: user.id }, userChanges);
+      if (userProperties) {
+        await manager.update(User, { id: user.id }, userProperties);
       }
 
-      if (profileChanges) {
-        await manager.update(Profile, { id: user.profileId }, profileChanges);
+      if (profileProperties) {
+        await manager.update(
+          Profile,
+          { id: user.profileId },
+          profileProperties,
+        );
       }
     });
     return this.usersRepository.findOneOrFail(userId);

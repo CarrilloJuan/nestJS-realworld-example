@@ -11,11 +11,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { CurrentUser } from 'src/auth/models/current-user';
-import { CurrentUserDecorator } from './current-user.decorator';
-import { ProfilesService } from './profiles.service';
-import { TransformerProfileResponse } from './transform-profile-response.interceptor';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/auth/interfaces/current-user';
+import { CurrentUserDecorator } from '../helpers/current-user.decorator';
+import { ProfilesService } from '../services/profiles.service';
+import { TransformerProfileResponse } from '../interceptors/transform-profile-response.interceptor';
 
 @ApiTags('Profiles')
 @UseInterceptors(ClassSerializerInterceptor)

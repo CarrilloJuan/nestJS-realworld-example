@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { classToPlain } from 'class-transformer';
 import { Connection, Repository } from 'typeorm';
-import { Profile } from './entities/profile.entity';
-import { User } from './entities/user.entity';
+import { Profile } from '../entities/profile.entity';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 export class ProfilesService {

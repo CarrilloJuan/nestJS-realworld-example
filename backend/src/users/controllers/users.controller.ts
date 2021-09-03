@@ -9,14 +9,14 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { AuthService } from 'src/auth/auth.service';
-import { TransformerUserResponse } from './transform-user-response.interceptor';
-import { CurrentUserDecorator } from './current-user.decorator';
-import { CurrentUser } from '../auth/models/current-user';
+import { UsersService } from '../services/users.service';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AuthService } from 'src/auth/services/auth.service';
+import { TransformerUserResponse } from '../interceptors/transform-user-response.interceptor';
+import { CurrentUserDecorator } from '../helpers/current-user.decorator';
+import { CurrentUser } from 'src/auth/interfaces/current-user';
 
 @ApiTags('Users')
 @UseInterceptors(TransformerUserResponse)

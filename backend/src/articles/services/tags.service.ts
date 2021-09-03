@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Connection } from 'typeorm';
-import { Tag } from './entities/tag.entity';
+import { Tag } from '../entities/tag.entity';
 
 @Injectable()
 export class TagsService {

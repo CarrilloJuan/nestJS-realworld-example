@@ -11,13 +11,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { CurrentUserDecorator } from 'src/users/current-user.decorator';
-import { ArticlesService } from './articles.service';
-import { CreateArticleDto } from './dto/create-article.dto';
-import { UpdateArticleDto } from './dto/update-article.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { CurrentUserDecorator } from 'src/users/helpers/current-user.decorator';
+import { ArticlesService } from '../services/articles.service';
+import { CreateArticleDto } from '../dto/create-article.dto';
+import { UpdateArticleDto } from '../dto/update-article.dto';
 
-import { CurrentUser } from '../auth/models/current-user';
+import { CurrentUser } from '../../auth/interfaces/current-user';
 
 @ApiTags('Articles')
 @Controller('articles')

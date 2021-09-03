@@ -14,7 +14,7 @@ import { Comment } from 'src/articles/entities/comment.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Tag } from './tag.entity';
 import { UpsertDate } from './upsert-date.entity';
-import { transformAuthorProperty } from '../helpers';
+import { transformAuthorProperty } from '../helpers/helpers';
 
 @Entity()
 export class Article extends UpsertDate {

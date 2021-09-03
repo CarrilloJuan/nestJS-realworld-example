@@ -1,7 +1,7 @@
 import { Body, Controller, Get, ParseArrayPipe, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { TagsService } from './tags.service';
+import { TagsService } from '../services/tags.service';
 
 @ApiTags('Tags')
 @Controller('tags')
