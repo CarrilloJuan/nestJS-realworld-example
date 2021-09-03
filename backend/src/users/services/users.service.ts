@@ -69,11 +69,11 @@ export class UsersService {
     );
 
     await this.connection.transaction(async (manager) => {
-      if (userProperties) {
+      if (Object.keys(userProperties).length > 0) {
         await manager.update(User, { id: user.id }, userProperties);
       }
 
-      if (profileProperties) {
+      if (Object.keys(profileProperties).length > 0) {
         await manager.update(
           Profile,
           { id: user.profileId },

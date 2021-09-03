@@ -13,7 +13,7 @@ import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/interfaces/current-user';
-import { CurrentUserDecorator } from '../helpers/current-user.decorator';
+import { CurrentUserDecorator } from '../../common/current-user.decorator';
 import { ProfilesService } from '../services/profiles.service';
 import { TransformerProfileResponse } from '../interceptors/transform-profile-response.interceptor';
 

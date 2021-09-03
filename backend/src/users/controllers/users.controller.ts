@@ -15,7 +15,7 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthService } from 'src/auth/services/auth.service';
 import { TransformerUserResponse } from '../interceptors/transform-user-response.interceptor';
-import { CurrentUserDecorator } from '../helpers/current-user.decorator';
+import { CurrentUserDecorator } from '../../common/current-user.decorator';
 import { CurrentUser } from 'src/auth/interfaces/current-user';
 
 @ApiTags('Users')

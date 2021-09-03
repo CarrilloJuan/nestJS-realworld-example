@@ -12,7 +12,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CurrentUserDecorator } from 'src/users/helpers/current-user.decorator';
+import { CurrentUserDecorator } from 'src/common/current-user.decorator';
 import { CommentsService } from '../services/comments.service';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 

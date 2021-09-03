@@ -12,7 +12,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CurrentUserDecorator } from 'src/users/helpers/current-user.decorator';
+import { CurrentUserDecorator } from 'src/common/current-user.decorator';
 import { ArticlesService } from '../services/articles.service';
 import { CreateArticleDto } from '../dto/create-article.dto';
 import { UpdateArticleDto } from '../dto/update-article.dto';
@@ -53,9 +53,10 @@ export class ArticlesController {
     @Query('author') author: string,
     @Query('favorited') favoritedByUser: string,
     @Query('tag') tag: string,
-    @CurrentUserDecorator() currentUser?: CurrentUser,
+    @CurrentUserDecorator() currentUser: CurrentUser,
   ) {
     const { userId } = currentUser || {};
+    // TODO: change to factory
     if (author) {
       return this.articlesService.findByAuthor(author, { userId });
     }

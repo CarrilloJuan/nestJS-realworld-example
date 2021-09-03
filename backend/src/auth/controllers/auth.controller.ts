@@ -9,7 +9,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 
 import { TransformerUserResponse } from '../interceptors/transformer-user-response.interceptor';
-import { CurrentUserDecorator } from 'src/users/helpers/current-user.decorator';
+import { CurrentUserDecorator } from 'src/common/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { AuthService } from '../services/auth.service';
 import { LocalAuthGuard } from '../services/passport/local-auth.guard';
